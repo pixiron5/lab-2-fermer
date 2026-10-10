@@ -1,7 +1,109 @@
 #include <stdio.h>
 
 #define INVENTORY_SIZE 10
+#define MAX_ITEM_ID 9
 
+void show_time(int day, int hour) {
+    printf("Текущее время: День %d, %02d:00\n", day, hour);
+}
+
+void skip_time(int *day, int *hour) {
+    int hours;
+    printf("Сколько часов хотите промотать? ");
+    if (scanf("%d", &hours) != 1) {
+        printf("Ошибка: нужно ввести число!\n");
+        while (getchar() != '\n');
+        return;
+    }
+    if (hours < 0) {
+        printf("Часы не могут быть отрицательными!\n");
+        return;
+    }
+    *hour += hours;
+    while (*hour >= 24) {
+        *hour -= 24;
+        (*day)++;
+    }
+    printf("Прошло %d часов.\n", hours);
+}
+   
+void show_inventory(int inv[], const char *names[]) {
+    for(int i = 0; i < INVENTORY_SIZE; i++)
+        printf("Слот %d: [%d] (%s)\n", i, inv[i], names[inv[i]]);
+}
+
+void put_item(int inv[]) {
+    int index,id;
+    printf("Введите индекс слота (0-%d): ", INVENTORY_SIZE - 1);
+    if (scanf("%d", &index) != 1) {
+        printf("Ошибка: Нужно ввести число!\n");
+        while (getchar() != '\n');
+        return;
+    }
+    if (index < 0 || index >= INVENTORY_SIZE) {
+        printf("Ошибка: индекс вне границ массива (0-%d)!\n", INVENTORY_SIZE - 1);
+        return;
+    }
+    printf("Введите индекс предмета (0-%d): ", MAX_ITEM_ID); 
+    if (scanf("%d", &id) != 1) {
+        printf("Ошибка: Нужно ввести число!\n");
+        while (getchar() != '\n');
+        return;
+    }
+    if (id < 0 || id > MAX_ITEM_ID) {
+        printf("Ошибка: такого ID не существует (0-%d)!\n", MAX_ITEM_ID);
+        return;
+    }
+    inv[index] = id;
+    printf("Предмет %d положен в слот %d.\n", id, index);
+}
+
+void drop_item(int inv[], const char *names[]) {
+    int index;
+    printf("Введите индекс слота, из которого вы хотите выбросить предмет (0-%d): ", INVENTORY_SIZE-1);
+    if (scanf("%d", &index) !=1) {
+        printf("Ошибка: Нужно ввести число!\n");
+        while (getchar() != '\n');
+        return; 
+    }
+    if (index <0 || index >= INVENTORY_SIZE) {
+        printf("Ошибка: индекс вне границ массива (0-%d)!\n", INVENTORY_SIZE - 1);
+        return;  
+    }
+    printf("Выброшен предмет: %d (%s)\n", inv[index], names[inv[index]]);
+    inv[index] = 0;
+    return;
+
+}
+
+void find_favorite(int inv[], const char *names[]) {
+    int max_count = 0;
+    int favorite_id = 0;
+
+    for (int i = 0; i < INVENTORY_SIZE; i++) {
+        if (inv[i] == 0) continue;
+
+    int count = 0;
+    for (int j = 0; j < INVENTORY_SIZE; j++) {
+        if (inv[j] == inv[i]) count++;
+    }
+
+    if (count > max_count) {
+        max_count = count;
+        favorite_id = inv[i];
+    }
+    }
+
+    if (favorite_id == 0) {
+        printf("Инвентарь пуст — любимого ресурса нет.\n");
+    } else if (max_count == 1) {
+        printf("Нет любимого ресурса — все предметы уникальны.\n");
+    } else {
+        printf("Любимый ресурс: ID %d (%s), количество слотов: %d\n",
+    favorite_id, names[favorite_id], max_count);
+    }
+    return;
+    }
 int main(void) {
     int current_day = 1;
     int current_hour = 8;
@@ -37,103 +139,24 @@ int main(void) {
                 printf("Выход.\n");
                 return 0;
             case 1:
-                printf("Текущее время: День %d, %02d:00\n", current_day, current_hour);
+                show_time(current_day,current_hour);
                 break;
-            case 2: {
-                int hours;
-                printf("Сколько часов потратить на работу? ");
-                if (scanf("%d", &hours) != 1) {
-                    printf("Ошибка: нужно ввести число!\n");
-                    while (getchar() != '\n');
-                    break;
-                }
-                if (hours < 0) {
-                    printf("Часы не могут быть отрицательными!\n");
-                    break;
-                }
-                current_hour += hours;
-                while (current_hour >= 24) {
-                    current_hour -= 24;
-                    current_day++;
-                }
-                printf("Прошло %d часов.\n", hours);
+            case 2: 
+                skip_time(&current_day,&current_hour);
                 break;
-            }
             case 3:
-                for (int i = 0; i < INVENTORY_SIZE; i++) {
-                    printf("Слот %d: [%d] (%s)\n", i, inventory[i], item_names[inventory[i]]);
-                }
+                show_inventory(inventory, item_names);
                 break;
-            case 4: {
-                int index, id;
-                printf("Введите индекс слота (0-%d): ", INVENTORY_SIZE - 1);
-                if (scanf("%d", &index) != 1) {
-                    printf("Ошибка: нужно ввести число!\n");
-                    while (getchar() != '\n');
-                    break;
-                }
-                if (index < 0 || index >= INVENTORY_SIZE) {
-                    printf("Ошибка: индекс вне границ массива (0-%d)!\n", INVENTORY_SIZE - 1);
-                    break;
-                }
-                printf("Введите ID предмета (0-9): ");
-                if (scanf("%d", &id) != 1) {
-                    printf("Ошибка: нужно ввести число!\n");
-                    while (getchar() != '\n');
-                    break;
-                }
-                if (id < 0 || id > 9) {
-                    printf("Ошибка: такого ID не существует!\n");
-                    break;
-                }
-                inventory[index] = id;
-                printf("Предмет %d положен в слот %d.\n", id, index);
+            case 4: 
+                put_item(inventory);
                 break;
-            }
             case 5: {
-                int index;
-                printf("Введите индекс слота для очистки (0-%d): ", INVENTORY_SIZE - 1);
-                if (scanf("%d", &index) != 1) {
-                    printf("Ошибка: нужно ввести число!\n");
-                    while (getchar() != '\n');
-                    break;
-                }
-                if (index < 0 || index >= INVENTORY_SIZE) {
-                    printf("Ошибка: индекс вне границ массива (0-%d)!\n", INVENTORY_SIZE - 1);
-                    break;
-                }
-                printf("Выброшен предмет: %d (%s)\n", inventory[index], item_names[inventory[index]]);
-                inventory[index] = 0;
+                drop_item(inventory, item_names);
                 break;
             }
-            case 6: {
-                int max_count = 0;
-                int favorite_id = 0;
-
-                for (int i = 0; i < INVENTORY_SIZE; i++) {
-                    if (inventory[i] == 0) continue;
-
-                    int count = 0;
-                    for (int j = 0; j < INVENTORY_SIZE; j++) {
-                        if (inventory[j] == inventory[i]) count++;
-                    }
-
-                    if (count > max_count) {
-                        max_count = count;
-                        favorite_id = inventory[i];
-                    }
-                }
-
-                if (favorite_id == 0) {
-                    printf("Инвентарь пуст — любимого ресурса нет.\n");
-                } else if (max_count == 1) {
-                    printf("Нет любимого ресурса — все предметы уникальны.\n");
-                } else {
-                    printf("Любимый ресурс: ID %d (%s), количество слотов: %d\n",
-                        favorite_id, item_names[favorite_id], max_count);
-                }
+            case 6:
+                find_favorite(inventory, item_names);
                 break;
-            }
             default:
                 printf("Неверный пункт меню!\n");
         }
