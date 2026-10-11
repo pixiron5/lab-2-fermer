@@ -5,6 +5,7 @@
 #define MAX_ITEM_ID 9
 #define MAX_NAME_LEN 32
 #define MAX_ITEMS 10
+#define MAX_LINE_LEN 256
 
 void show_time(int day, int hour) { //ТЕКУЩИЕ ВРЕМЯ
     printf("Текущее время: День %d, %02d:00\n", day, hour);
@@ -178,10 +179,73 @@ void write_diary(char farmer_name[], int day, int hour, int inv[], char names[][
     for (int i = 0; i < INVENTORY_SIZE; i++) {
         fprintf(file, "Слот %d: %s\n", i, names[inv[i]]);
     }
-    fprintf(file, "\n");   // пустая строка между записями
+    fprintf(file, "\n");  
 
     fclose(file);
     printf("Дневник записан в diary.txt.\n");
+}
+
+void replace_tag(const char *src, const char *tag, const char *value, char *dest) {
+    int i = 0;   
+    int j = 0;   
+
+    while (src[i] != '\0') {
+        if (strstr(&src[i], tag) == &src[i]) {
+            for (int k = 0; value[k] != '\0'; k++) {
+                dest[j] = value[k];
+                j++;
+            }
+            i += strlen(tag);   
+        } else {   
+            dest[j] = src[i];
+            i++;
+            j++;
+        }
+    }
+    dest[j] = '\0';  
+}
+
+
+void process_input(char farmer_name[], int current_day, int inv[], char item_names[][MAX_NAME_LEN]) {
+    FILE *in = fopen("input.txt", "r");
+    if (in == NULL) {
+        printf("Ошибка: input.txt не найден!\n");
+        return;
+    }
+
+    FILE *out = fopen("output.txt", "w");
+    if (out == NULL) {
+        printf("Ошибка: не удалось открыть output.txt!\n");
+        fclose(in);
+        return;
+    }
+
+    char day_str[16];
+    sprintf(day_str, "%d", current_day);
+
+    const char *item_name = item_names[inv[0]];
+
+    char line[MAX_LINE_LEN];
+    while (fgets(line, MAX_LINE_LEN, in) != NULL) {
+        line[strcspn(line, "\n")] = '\0';
+
+        char temp1[MAX_LINE_LEN * 2];
+        char temp2[MAX_LINE_LEN * 2];
+        char result[MAX_LINE_LEN * 2];
+
+        replace_tag(line, "<NAME>", farmer_name, temp1);
+        replace_tag(temp1, "<DAY>", day_str, temp2);
+        replace_tag(temp2, "<ITEM>", item_name, result);
+
+        printf("%s\n", result);
+
+        fprintf(out, "%s\n", result);
+    }
+
+    fclose(in);
+    fclose(out);
+
+    printf("\nРезультат сохранён в output.txt.\n");
 }
 
 int main(void) {
@@ -210,6 +274,7 @@ int main(void) {
         printf("[6] Любимый ресурс\n");
         printf("[7] Поиск предмета по названию\n");
         printf("[8] Записать состояние в дневник\n");
+        printf("[9] Расшифровать старые записи\n");
         printf("Ваш выбор: ");
 
         if (scanf("%d", &choice) != 1) {
@@ -248,6 +313,9 @@ int main(void) {
                 break;
             case 8:
                 write_diary(farmer_name, current_day, current_hour, inventory, item_names);
+                break;
+            case 9:
+                process_input(farmer_name, current_day, inventory, item_names);
                 break;
             default:
                 printf("Неверный пункт меню!\n");
