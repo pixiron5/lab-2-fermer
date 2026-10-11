@@ -4,12 +4,13 @@
 #define INVENTORY_SIZE 10
 #define MAX_ITEM_ID 9
 #define MAX_NAME_LEN 32
+#define MAX_ITEMS 10
 
-void show_time(int day, int hour) {
+void show_time(int day, int hour) { //ТЕКУЩИЕ ВРЕМЯ
     printf("Текущее время: День %d, %02d:00\n", day, hour);
 }
 
-void skip_time(int *day, int *hour) {
+void skip_time(int *day, int *hour) { //ПРОМОТАТЬ ВРЕМЯ
     int hours;
     printf("Сколько часов хотите промотать? ");
     if (scanf("%d", &hours) != 1) {
@@ -29,12 +30,12 @@ void skip_time(int *day, int *hour) {
     printf("Прошло %d часов.\n", hours);
 }
    
-void show_inventory(int inv[], const char *names[]) {
+void show_inventory(int inv[], char names[][MAX_NAME_LEN]) { //ПОСМОТРЕТЬ ИНВЕНТАРЬ
     for(int i = 0; i < INVENTORY_SIZE; i++)
         printf("Слот %d: [%d] (%s)\n", i, inv[i], names[inv[i]]);
 }
 
-void put_item(int inv[]) {
+void put_item(int inv[]) { //ПОМЕСТИТЬ ПРЕДМЕТ В СЛОТ
     int index,id;
     printf("Введите индекс слота (0-%d): ", INVENTORY_SIZE - 1);
     if (scanf("%d", &index) != 1) {
@@ -57,10 +58,10 @@ void put_item(int inv[]) {
         return;
     }
     inv[index] = id;
-    printf("Предмет %d положен в слот %d.\n", id, index);
+    printf("Предмет [%d] положен в слот %d.\n", id, index);
 }
 
-void drop_item(int inv[], const char *names[]) {
+void drop_item(int inv[], char names[][MAX_NAME_LEN]) { //ВЫКИНУТЬ ПРЕДМЕТ
     int index;
     printf("Введите индекс слота, из которого вы хотите выбросить предмет (0-%d): ", INVENTORY_SIZE-1);
     if (scanf("%d", &index) !=1) {
@@ -78,7 +79,7 @@ void drop_item(int inv[], const char *names[]) {
 
 }
 
-void find_favorite(int inv[], const char *names[]) {
+void find_favorite(int inv[], char names[][MAX_NAME_LEN]) { //ЛЮБИМЫЙ ПРЕДМЕТ
     int max_count = 0;
     int favorite_id = 0;
 
@@ -101,15 +102,36 @@ void find_favorite(int inv[], const char *names[]) {
     } else if (max_count == 1) {
         printf("Нет любимого ресурса — все предметы уникальны.\n");
     } else {
-        printf("Любимый ресурс: ID %d (%s), количество слотов: %d\n",
-    favorite_id, names[favorite_id], max_count);
+        printf("Любимый ресурс: ID %d (%s), количество слотов: %d\n",favorite_id, names[favorite_id], max_count);
     }
     return;
     }
 
-void read_string(char *buffer, int size) {
+void read_string(char *buffer, int size) { //ВВОД СТРОКИ
     fgets(buffer, size, stdin);
     buffer[strcspn(buffer, "\n")] = '\0';
+}
+
+void load_items(char names[][MAX_NAME_LEN]) { //ИНВЕНТАРЬ
+    const char *defaults[MAX_ITEMS] = {
+        "Пусто", "Дерево", "Камень", "Семена", "Лопата",
+        "Грабли", "Тяпка", "Телега", "Лейка", "Корзина"
+    };
+    FILE *file = fopen("items.txt", "r");
+    if (file == NULL) {
+        printf("Предупреждение: items.txt не найден, использую стандартные названия.\n");
+        for (int i = 0; i < MAX_ITEMS; i++) {
+            strcpy(names[i], defaults[i]);
+        }
+        return;
+    }
+    for (int i = 0; i < MAX_ITEMS; i++) {
+        if (fgets(names[i], MAX_NAME_LEN, file) == NULL) {
+            break;
+        }
+        names[i][strcspn(names[i], "\n")] = '\0';
+    }
+    fclose(file);
 }
 
 int main(void) {
@@ -118,11 +140,8 @@ int main(void) {
     int inventory[INVENTORY_SIZE] = {4, 6, 0, 2, 0, 3, 8, 0, 1, 0};
     char farmer_name[MAX_NAME_LEN];
 
-    const char *item_names[10] = {
-        "пусто", "дерево", "камень", "семена",
-        "лопата", "грабли", "тяпка", "телега",
-        "лейка", "корзина"
-    };
+    char item_names[MAX_ITEMS][MAX_NAME_LEN];
+    load_items(item_names);
 
     int choice;
 
@@ -163,10 +182,9 @@ int main(void) {
             case 4: 
                 put_item(inventory);
                 break;
-            case 5: {
+            case 5: 
                 drop_item(inventory, item_names);
                 break;
-            }
             case 6:
                 find_favorite(inventory, item_names);
                 break;
