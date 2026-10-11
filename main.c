@@ -32,7 +32,7 @@ void skip_time(int *day, int *hour) { //ПРОМОТАТЬ ВРЕМЯ
    
 void show_inventory(int inv[], char names[][MAX_NAME_LEN]) { //ПОСМОТРЕТЬ ИНВЕНТАРЬ
     for(int i = 0; i < INVENTORY_SIZE; i++)
-        printf("Слот %d: [%d] (%s)\n", i, inv[i], names[inv[i]]);
+        printf("Слот %d: [%d] - (%s)\n", i, inv[i], names[inv[i]]);
 }
 
 void put_item(int inv[]) { //ПОМЕСТИТЬ ПРЕДМЕТ В СЛОТ
@@ -134,6 +134,39 @@ void load_items(char names[][MAX_NAME_LEN]) { //ИНВЕНТАРЬ
     fclose(file);
 }
 
+void find_by_name(int inv[], char names[][MAX_NAME_LEN]) { //ПОИСК ПРДМЕТА
+    char search[MAX_NAME_LEN];
+    printf("Введите название предмета: ");
+    read_string(search, MAX_NAME_LEN);
+
+    int found_id = -1;   
+    for (int i = 0; i < MAX_ITEMS; i++) {
+        if (strcmp(names[i], search) == 0) {
+            found_id = i;
+            break;
+        }
+    }
+
+    if (found_id == -1) {
+        printf("Такого предмета нет в каталоге.\n");
+        return;
+    }
+
+    int count = 0;
+    printf("Предмет '%s' (ID %d) найден в слотах: ", search, found_id);
+    for (int i = 0; i < INVENTORY_SIZE; i++) {
+        if (inv[i] == found_id) {
+            printf("%d ", i);
+            count++;
+        }
+    }
+
+    if (count == 0) {
+        printf("нет");
+    }
+    printf("\n");
+}
+
 int main(void) {
     int current_day = 1;
     int current_hour = 8;
@@ -158,6 +191,7 @@ int main(void) {
         printf("[4] Положить предмет\n");
         printf("[5] Выбросить предмет\n");
         printf("[6] Любимый ресурс\n");
+        printf("[7] Поиск предмета по названию\n");
         printf("Ваш выбор: ");
 
         if (scanf("%d", &choice) != 1) {
@@ -166,6 +200,9 @@ int main(void) {
             continue;
         }
 
+        
+        while (getchar() != '\n');
+         
         switch (choice) {
             case 0:
                 printf("Выход.\n");
@@ -187,6 +224,9 @@ int main(void) {
                 break;
             case 6:
                 find_favorite(inventory, item_names);
+                break;
+            case 7:
+                find_by_name(inventory, item_names);
                 break;
             default:
                 printf("Неверный пункт меню!\n");
