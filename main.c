@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <string.h>
 
 #define INVENTORY_SIZE 10
 #define MAX_ITEM_ID 9
+#define MAX_NAME_LEN 32
 
 void show_time(int day, int hour) {
     printf("Текущее время: День %d, %02d:00\n", day, hour);
@@ -104,10 +106,17 @@ void find_favorite(int inv[], const char *names[]) {
     }
     return;
     }
+
+void read_string(char *buffer, int size) {
+    fgets(buffer, size, stdin);
+    buffer[strcspn(buffer, "\n")] = '\0';
+}
+
 int main(void) {
     int current_day = 1;
     int current_hour = 8;
     int inventory[INVENTORY_SIZE] = {4, 6, 0, 2, 0, 3, 8, 0, 1, 0};
+    char farmer_name[MAX_NAME_LEN];
 
     const char *item_names[10] = {
         "пусто", "дерево", "камень", "семена",
@@ -117,8 +126,12 @@ int main(void) {
 
     int choice;
 
+    printf("Введите имя фермера: ");
+    read_string(farmer_name, MAX_NAME_LEN);
+    printf("Добро пожаловать, %s!\n", farmer_name);
+
     while (1) {
-        printf("\n=== Меню ===\n");
+        printf("\n=== Фермер %s, День %d, %02d:00 ===\n", farmer_name, current_day, current_hour);
         printf("[0] Выход\n");
         printf("[1] Посмотреть на часы\n");
         printf("[2] Промотать время\n");
