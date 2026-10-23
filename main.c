@@ -1,11 +1,25 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>   
+#include <time.h> 
 
 #define INVENTORY_SIZE 10
 #define MAX_ITEM_ID 9
 #define MAX_NAME_LEN 32
 #define MAX_ITEMS 10
 #define MAX_LINE_LEN 256
+
+#define MIN_MAP_SIZE 5
+#define MAX_MAP_SIZE 30
+#define WALL '#'
+#define FLOOR '.'
+#define TREE 'T'
+#define STONE 'R'
+#define HERO '@'
+#define STAIRS_UP 'U'
+#define STAIRS_DOWN 'D'
+#define ABYSS '!'
+#define COLLAPSE_INTERVAL 5
 
 void show_time(int day, int hour) { //ТЕКУЩИЕ ВРЕМЯ
     printf("Текущее время: День %d, %02d:00\n", day, hour);
@@ -248,6 +262,60 @@ void process_input(char farmer_name[], int current_day, int inv[], char item_nam
     printf("\nРезультат сохранён в output.txt.\n");
 }
 
+char **create_map(int height, int width) {
+    char **map = malloc(height * sizeof(char*));
+
+    if (map == NULL) {
+    printf("Ошибка: не удалось выделить память!\n");
+    return NULL;
+    }
+    for (int i = 0; i < height; i++) {
+    map[i] = malloc(width * sizeof(char));
+    if (map[i] == NULL) {
+        for (int j = 0; j < i; j++) {
+            free(map[j]);
+        }
+        free(map);
+        printf("Ошибка: не удалось выделить память!\n");
+        return NULL;
+    }
+    }
+
+    return map;
+}
+
+void fill_map(char **map, int height, int width) {
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            if (i == 0 || i == height - 1 || j == 0 || j == width - 1) {
+                map[i][j] = WALL;
+            } else {
+                int r = rand() % 100;
+                if (r < 15) map[i][j] = TREE;
+                else if (r < 30) map[i][j] = STONE;
+                else map[i][j] = FLOOR;
+            }
+        }
+    }
+}
+
+void free_map(char **map, int height) {
+    if (map == NULL) return;
+    for (int i = 0; i < height; i++) {
+        free(map[i]);
+    }
+    free(map);
+}
+
+void print_map(char **map, int height, int width) {
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            printf("%c ", map[i][j]);
+        }
+        printf("\n");
+    }
+}
+
 int main(void) {
     int current_day = 1;
     int current_hour = 8;
@@ -258,6 +326,14 @@ int main(void) {
     load_items(item_names);
 
     int choice;
+
+    srand(time(NULL));
+    char **map = create_map(10, 10);
+    if (map == NULL) return 1;
+    fill_map(map, 10, 10);
+    print_map(map, 10, 10);
+    free_map(map, 10);
+    printf("Память освобождена.\n");
 
     printf("Введите имя фермера: ");
     read_string(farmer_name, MAX_NAME_LEN);
@@ -316,6 +392,9 @@ int main(void) {
                 break;
             case 9:
                 process_input(farmer_name, current_day, inventory, item_names);
+                break;
+            case 10:
+                
                 break;
             default:
                 printf("Неверный пункт меню!\n");
