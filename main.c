@@ -307,10 +307,14 @@ void free_map(char **map, int height) {
     free(map);
 }
 
-void print_map(char **map, int height, int width) {
+void print_map(char **map, int height, int width, int hero_x, int hero_y) {
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            printf("%c ", map[i][j]);
+            if (i == hero_y && j == hero_x) {
+                printf("%c ", HERO);
+            } else {
+                printf("%c ", map[i][j]);
+            }
         }
         printf("\n");
     }
@@ -321,7 +325,6 @@ void place_hero(char **map, int height, int width, int *hero_x, int *hero_y) {
         int x = 1 + rand() % (width - 2);
         int y = 1 + rand() % (height - 2);
         if (map[y][x] == FLOOR) {
-            map[y][x] = HERO;
             *hero_x = x;
             *hero_y = y;
             return;
@@ -338,54 +341,84 @@ int move_hero(char **map, int height, int width, int *hero_x, int *hero_y, char 
     else if (direction == 'A' || direction == 'a') new_x--;
     else if (direction == 'D' || direction == 'd') new_x++;
 
-    if (new_x < 0 || new_x >= width || new_y < 0 || new_y >= height) {
-        return 0;
-    }
+    if (new_x < 0 || new_x >= width || new_y < 0 || new_y >= height) return 0;
 
-    if (map[new_y][new_x] != FLOOR) {
-        return 0;
-    }
+    char target = map[new_y][new_x];
+    if (target != FLOOR && target != STAIRS_DOWN) return 0;
 
-    map[*hero_y][*hero_x] = FLOOR;
-    map[new_y][new_x] = HERO;
     *hero_x = new_x;
     *hero_y = new_y;
     return 1;
 }
 
-void adventure(void) {
-    int height = MIN_MAP_SIZE + rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1);
-    int width = MIN_MAP_SIZE + rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1);
-
-    char **map = create_map(height, width);
-    if (map == NULL) return;
-    fill_map(map, height, width);
-
-    int hero_x, hero_y;
-    place_hero(map, height, width, &hero_x, &hero_y);
-
-    char direction;
+void place_stairs(char **map, int height, int width, char symbol) {
     while (1) {
-        print_map(map, height, width);
-        printf("W/A/S/D — движение, Q — выход: ");
-        scanf(" %c", &direction);
-
-        if (direction == 'Q' || direction == 'q') {
-            break;
-        }
-        if (direction == 'W' || direction == 'w' ||
-            direction == 'A' || direction == 'a' ||
-            direction == 'S' || direction == 's' ||
-            direction == 'D' || direction == 'd') {
-            move_hero(map, height, width, &hero_x, &hero_y, direction);
-        } else {
-            printf("Неизвестная команда!\n");
-            while (getchar() != '\n');
+        int x = 1 + rand() % (width - 2);
+        int y = 1 + rand() % (height - 2);
+        if (map[y][x] == FLOOR) {
+            map[y][x] = symbol;
+            return;
         }
     }
+}
 
-    free_map(map, height);
-    printf("Вы вышли из приключения.\n");
+void adventure(void) {
+    int floor = 1;
+
+    while (1) {
+        int height = MIN_MAP_SIZE + rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1);
+        int width = MIN_MAP_SIZE + rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1);
+
+        char **map = create_map(height, width);
+        if (map == NULL) return;
+        fill_map(map, height, width);
+
+        int hero_x, hero_y;
+        place_hero(map, height, width, &hero_x, &hero_y);
+        map[hero_y][hero_x] = STAIRS_DOWN;
+        place_stairs(map, height, width, STAIRS_UP);
+
+        int new_floor = 0;
+        char direction;
+
+        while (1) {
+            printf("Этаж %d\n", floor);
+            print_map(map, height, width, hero_x, hero_y);
+            printf("W/A/S/D — движение, Q — выход: ");
+            scanf(" %c", &direction);
+
+            if (direction == 'Q' || direction == 'q') {
+                if (map[hero_y][hero_x] == STAIRS_DOWN) {
+                    free_map(map, height);
+                    printf("Вы вышли из башни.\n");
+                    return;
+                } else {
+                    printf("Выход работает только на лестнице вниз (D)!\n");
+                }
+                continue;
+            }
+
+            int nx = hero_x, ny = hero_y;
+            if (direction == 'W' || direction == 'w') ny--;
+            else if (direction == 'S' || direction == 's') ny++;
+            else if (direction == 'A' || direction == 'a') nx--;
+            else if (direction == 'D' || direction == 'd') nx++;
+
+            if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+
+            if (map[ny][nx] == STAIRS_UP) {
+                printf("Вы спускаетесь на этаж %d!\n", floor + 1);
+                new_floor = 1;
+                break;
+            }
+
+            move_hero(map, height, width, &hero_x, &hero_y, direction);
+        }
+
+        free_map(map, height);
+        if (!new_floor) return;
+        floor++;
+    }
 }
 
 int main(void) {
