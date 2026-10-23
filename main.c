@@ -316,6 +316,78 @@ void print_map(char **map, int height, int width) {
     }
 }
 
+void place_hero(char **map, int height, int width, int *hero_x, int *hero_y) {
+    while (1) {
+        int x = 1 + rand() % (width - 2);
+        int y = 1 + rand() % (height - 2);
+        if (map[y][x] == FLOOR) {
+            map[y][x] = HERO;
+            *hero_x = x;
+            *hero_y = y;
+            return;
+        }
+    }
+}
+
+int move_hero(char **map, int height, int width, int *hero_x, int *hero_y, char direction) {
+    int new_x = *hero_x;
+    int new_y = *hero_y;
+
+    if (direction == 'W' || direction == 'w') new_y--;
+    else if (direction == 'S' || direction == 's') new_y++;
+    else if (direction == 'A' || direction == 'a') new_x--;
+    else if (direction == 'D' || direction == 'd') new_x++;
+
+    if (new_x < 0 || new_x >= width || new_y < 0 || new_y >= height) {
+        return 0;
+    }
+
+    if (map[new_y][new_x] != FLOOR) {
+        return 0;
+    }
+
+    map[*hero_y][*hero_x] = FLOOR;
+    map[new_y][new_x] = HERO;
+    *hero_x = new_x;
+    *hero_y = new_y;
+    return 1;
+}
+
+void adventure(void) {
+    int height = MIN_MAP_SIZE + rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1);
+    int width = MIN_MAP_SIZE + rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1);
+
+    char **map = create_map(height, width);
+    if (map == NULL) return;
+    fill_map(map, height, width);
+
+    int hero_x, hero_y;
+    place_hero(map, height, width, &hero_x, &hero_y);
+
+    char direction;
+    while (1) {
+        print_map(map, height, width);
+        printf("W/A/S/D — движение, Q — выход: ");
+        scanf(" %c", &direction);
+
+        if (direction == 'Q' || direction == 'q') {
+            break;
+        }
+        if (direction == 'W' || direction == 'w' ||
+            direction == 'A' || direction == 'a' ||
+            direction == 'S' || direction == 's' ||
+            direction == 'D' || direction == 'd') {
+            move_hero(map, height, width, &hero_x, &hero_y, direction);
+        } else {
+            printf("Неизвестная команда!\n");
+            while (getchar() != '\n');
+        }
+    }
+
+    free_map(map, height);
+    printf("Вы вышли из приключения.\n");
+}
+
 int main(void) {
     int current_day = 1;
     int current_hour = 8;
@@ -326,14 +398,6 @@ int main(void) {
     load_items(item_names);
 
     int choice;
-
-    srand(time(NULL));
-    char **map = create_map(10, 10);
-    if (map == NULL) return 1;
-    fill_map(map, 10, 10);
-    print_map(map, 10, 10);
-    free_map(map, 10);
-    printf("Память освобождена.\n");
 
     printf("Введите имя фермера: ");
     read_string(farmer_name, MAX_NAME_LEN);
@@ -351,6 +415,7 @@ int main(void) {
         printf("[7] Поиск предмета по названию\n");
         printf("[8] Записать состояние в дневник\n");
         printf("[9] Расшифровать старые записи\n");
+        printf("[10] Отправиться в приключение\n");
         printf("Ваш выбор: ");
 
         if (scanf("%d", &choice) != 1) {
@@ -394,7 +459,7 @@ int main(void) {
                 process_input(farmer_name, current_day, inventory, item_names);
                 break;
             case 10:
-                
+                adventure();
                 break;
             default:
                 printf("Неверный пункт меню!\n");
