@@ -21,11 +21,11 @@
 #define ABYSS '!'
 #define COLLAPSE_INTERVAL 5
 
-void show_time(int day, int hour) { //ТЕКУЩИЕ ВРЕМЯ
+void show_time(int day, int hour) {
     printf("Текущее время: День %d, %02d:00\n", day, hour);
 }
 
-void skip_time(int *day, int *hour) { //ПРОМОТАТЬ ВРЕМЯ
+void skip_time(int *day, int *hour) {
     int hours;
     printf("Сколько часов хотите промотать? ");
     if (scanf("%d", &hours) != 1) {
@@ -45,12 +45,12 @@ void skip_time(int *day, int *hour) { //ПРОМОТАТЬ ВРЕМЯ
     printf("Прошло %d часов.\n", hours);
 }
    
-void show_inventory(int inv[], char names[][MAX_NAME_LEN]) { //ПОСМОТРЕТЬ ИНВЕНТАРЬ
+void show_inventory(int inv[], char names[][MAX_NAME_LEN]) {
     for(int i = 0; i < INVENTORY_SIZE; i++)
         printf("Слот %d: [%d] - (%s)\n", i, inv[i], names[inv[i]]);
 }
 
-void put_item(int inv[]) { //ПОМЕСТИТЬ ПРЕДМЕТ В СЛОТ
+void put_item(int inv[]) {
     int index,id;
     printf("Введите индекс слота (0-%d): ", INVENTORY_SIZE - 1);
     if (scanf("%d", &index) != 1) {
@@ -76,7 +76,7 @@ void put_item(int inv[]) { //ПОМЕСТИТЬ ПРЕДМЕТ В СЛОТ
     printf("Предмет [%d] положен в слот %d.\n", id, index);
 }
 
-void drop_item(int inv[], char names[][MAX_NAME_LEN]) { //ВЫКИНУТЬ ПРЕДМЕТ
+void drop_item(int inv[], char names[][MAX_NAME_LEN]) {
     int index;
     printf("Введите индекс слота, из которого вы хотите выбросить предмет (0-%d): ", INVENTORY_SIZE-1);
     if (scanf("%d", &index) !=1) {
@@ -90,26 +90,24 @@ void drop_item(int inv[], char names[][MAX_NAME_LEN]) { //ВЫКИНУТЬ ПР�
     }
     printf("Выброшен предмет: %d (%s)\n", inv[index], names[inv[index]]);
     inv[index] = 0;
-    return;
-
 }
 
-void find_favorite(int inv[], char names[][MAX_NAME_LEN]) { //ЛЮБИМЫЙ ПРЕДМЕТ
+void find_favorite(int inv[], char names[][MAX_NAME_LEN]) {
     int max_count = 0;
     int favorite_id = 0;
 
     for (int i = 0; i < INVENTORY_SIZE; i++) {
         if (inv[i] == 0) continue;
 
-    int count = 0;
-    for (int j = 0; j < INVENTORY_SIZE; j++) {
-        if (inv[j] == inv[i]) count++;
-    }
+        int count = 0;
+        for (int j = 0; j < INVENTORY_SIZE; j++) {
+            if (inv[j] == inv[i]) count++;
+        }
 
-    if (count > max_count) {
-        max_count = count;
-        favorite_id = inv[i];
-    }
+        if (count > max_count) {
+            max_count = count;
+            favorite_id = inv[i];
+        }
     }
 
     if (favorite_id == 0) {
@@ -119,15 +117,14 @@ void find_favorite(int inv[], char names[][MAX_NAME_LEN]) { //ЛЮБИМЫЙ П�
     } else {
         printf("Любимый ресурс: ID %d (%s), количество слотов: %d\n",favorite_id, names[favorite_id], max_count);
     }
-    return;
-    }
+}
 
-void read_string(char *buffer, int size) { //ВВОД СТРОКИ
+void read_string(char *buffer, int size) {
     fgets(buffer, size, stdin);
     buffer[strcspn(buffer, "\n")] = '\0';
 }
 
-void load_items(char names[][MAX_NAME_LEN]) { //ИНВЕНТАРЬ
+void load_items(char names[][MAX_NAME_LEN]) {
     const char *defaults[MAX_ITEMS] = {
         "Пусто", "Дерево", "Камень", "Семена", "Лопата",
         "Грабли", "Тяпка", "Телега", "Лейка", "Корзина"
@@ -149,7 +146,7 @@ void load_items(char names[][MAX_NAME_LEN]) { //ИНВЕНТАРЬ
     fclose(file);
 }
 
-void find_by_name(int inv[], char names[][MAX_NAME_LEN]) { //ПОИСК ПРДМЕТА
+void find_by_name(int inv[], char names[][MAX_NAME_LEN]) {
     char search[MAX_NAME_LEN];
     printf("Введите название предмета: ");
     read_string(search, MAX_NAME_LEN);
@@ -219,7 +216,6 @@ void replace_tag(const char *src, const char *tag, const char *value, char *dest
     dest[j] = '\0';  
 }
 
-
 void process_input(char farmer_name[], int current_day, int inv[], char item_names[][MAX_NAME_LEN]) {
     FILE *in = fopen("input.txt", "r");
     if (in == NULL) {
@@ -266,19 +262,19 @@ char **create_map(int height, int width) {
     char **map = malloc(height * sizeof(char*));
 
     if (map == NULL) {
-    printf("Ошибка: не удалось выделить память!\n");
-    return NULL;
-    }
-    for (int i = 0; i < height; i++) {
-    map[i] = malloc(width * sizeof(char));
-    if (map[i] == NULL) {
-        for (int j = 0; j < i; j++) {
-            free(map[j]);
-        }
-        free(map);
         printf("Ошибка: не удалось выделить память!\n");
         return NULL;
     }
+    for (int i = 0; i < height; i++) {
+        map[i] = malloc(width * sizeof(char));
+        if (map[i] == NULL) {
+            for (int j = 0; j < i; j++) {
+                free(map[j]);
+            }
+            free(map);
+            printf("Ошибка: не удалось выделить память!\n");
+            return NULL;
+        }
     }
 
     return map;
@@ -352,14 +348,73 @@ int move_hero(char **map, int height, int width, int *hero_x, int *hero_y, char 
 }
 
 void place_stairs(char **map, int height, int width, char symbol) {
-    while (1) {
-        int x = 1 + rand() % (width - 2);
-        int y = 1 + rand() % (height - 2);
+    int attempts = 0;
+    while (attempts < 1000) {
+        int x = 2 + rand() % (width - 4);
+        int y = 2 + rand() % (height - 4);
         if (map[y][x] == FLOOR) {
             map[y][x] = symbol;
             return;
         }
+        attempts++;
     }
+    for (int i = 1; i < height - 1; i++) {
+        for (int j = 1; j < width - 1; j++) {
+            if (map[i][j] == FLOOR) {
+                map[i][j] = symbol;
+                return;
+            }
+        }
+    }
+}
+
+void collapse_floor(char **map, int height, int width, int hero_x, int hero_y) {
+    char **copy = create_map(height, width);
+    if (copy == NULL) return;
+
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            copy[i][j] = map[i][j];
+        }
+    }
+
+    for (int i = 1; i < height - 1; i++) {
+        for (int j = 1; j < width - 1; j++) {
+            if (copy[i][j] == WALL || copy[i][j] == ABYSS) continue;
+            
+            int edge = 0;
+            if (copy[i-1][j] == WALL || copy[i-1][j] == ABYSS) edge = 1;
+            if (copy[i+1][j] == WALL || copy[i+1][j] == ABYSS) edge = 1;
+            if (copy[i][j-1] == WALL || copy[i][j-1] == ABYSS) edge = 1;
+            if (copy[i][j+1] == WALL || copy[i][j+1] == ABYSS) edge = 1;
+
+            if (edge) {
+                if (i != hero_y || j != hero_x) {
+                    map[i][j] = ABYSS;
+                }
+            }
+        }
+    }
+
+    free_map(copy, height);
+}
+
+int is_stairs_up_present(char **map, int height, int width) {
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            if (map[i][j] == STAIRS_UP) return 1;
+        }
+    }
+    return 0;
+}
+
+int is_stairs_down_present(char **map, int height, int width) {
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            if (map[i][j] == STAIRS_DOWN) return 1;
+        }
+    }
+    return 0;
 }
 
 void adventure(void) {
@@ -368,6 +423,8 @@ void adventure(void) {
     while (1) {
         int height = MIN_MAP_SIZE + rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1);
         int width = MIN_MAP_SIZE + rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1);
+
+        int steps = 0;
 
         char **map = create_map(height, width);
         if (map == NULL) return;
@@ -382,13 +439,15 @@ void adventure(void) {
         char direction;
 
         while (1) {
-            printf("Этаж %d\n", floor);
+            printf("\n--- Этаж %d ---\n", floor);
             print_map(map, height, width, hero_x, hero_y);
             printf("W/A/S/D — движение, Q — выход: ");
             scanf(" %c", &direction);
 
             if (direction == 'Q' || direction == 'q') {
-                if (map[hero_y][hero_x] == STAIRS_DOWN) {
+                if (map[hero_y][hero_x] == STAIRS_DOWN || 
+                   !is_stairs_up_present(map, height, width) || 
+                   !is_stairs_down_present(map, height, width)) {
                     free_map(map, height);
                     printf("Вы вышли из башни.\n");
                     return;
@@ -403,22 +462,44 @@ void adventure(void) {
             else if (direction == 'S' || direction == 's') ny++;
             else if (direction == 'A' || direction == 'a') nx--;
             else if (direction == 'D' || direction == 'd') nx++;
+            else {
+                printf("Неизвестная команда!\n");
+                while (getchar() != '\n');
+                continue;
+            }
 
             if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
 
             if (map[ny][nx] == STAIRS_UP) {
-                printf("Вы спускаетесь на этаж %d!\n", floor + 1);
+                printf("Вы поднимаетесь на этаж %d!\n", floor + 1);
                 new_floor = 1;
                 break;
             }
 
-            move_hero(map, height, width, &hero_x, &hero_y, direction);
+            if (move_hero(map, height, width, &hero_x, &hero_y, direction)) {
+                steps++;
+
+                if (steps % COLLAPSE_INTERVAL == 0) {
+                    printf("Пол начинает рушиться!\n");
+                    collapse_floor(map, height, width, hero_x, hero_y);
+
+                    if (map[hero_y][hero_x] == ABYSS) {
+                        printf("Вы провалились в бездну! Игра окончена.\n");
+                        free_map(map, height);
+                        return;
+                    }
+
+                    if (!is_stairs_up_present(map, height, width)) {
+                        printf("Лестница вверх провалилась! Нужно срочно эвакуироваться.\n");
+                    }
+                }
+            }
         }
 
         free_map(map, height);
         if (!new_floor) return;
         floor++;
-    }
+    }    
 }
 
 int main(void) {
@@ -435,6 +516,8 @@ int main(void) {
     printf("Введите имя фермера: ");
     read_string(farmer_name, MAX_NAME_LEN);
     printf("Добро пожаловать, %s!\n", farmer_name);
+
+    srand(time(NULL));
 
     while (1) {
         printf("\n=== Фермер %s, День %d, %02d:00 ===\n", farmer_name, current_day, current_hour);
@@ -457,7 +540,6 @@ int main(void) {
             continue;
         }
 
-        
         while (getchar() != '\n');
 
         switch (choice) {
