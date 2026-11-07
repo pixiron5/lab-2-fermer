@@ -2,6 +2,15 @@
 #include <stdlib.h>
 #include "map.h"
 
+Direction char_to_direction(char c) {
+    if (c == 'W' || c == 'w') return DIR_UP;
+    if (c == 'S' || c == 's') return DIR_DOWN;
+    if (c == 'A' || c == 'a') return DIR_LEFT;
+    if (c == 'D' || c == 'd') return DIR_RIGHT;
+    if (c == 'Q' || c == 'q') return DIR_QUIT;
+    return DIR_NONE;
+}
+
 Map *create_map(int height, int width) {
     Map *map = malloc(sizeof(Map));
     if (map == NULL) {
@@ -173,15 +182,17 @@ void adventure(void) {
         place_stairs(map, STAIRS_UP);
 
         int new_floor = 0;
-        char direction;
+        char direction_char;
 
         while (1) {
             printf("\n--- Этаж %d ---\n", map->floor);
             print_map(map, hero_x, hero_y);
             printf("W/A/S/D — движение, Q — выход: ");
-            scanf(" %c", &direction);
+            scanf(" %c", &direction_char);
 
-            if (direction == 'Q' || direction == 'q') {
+            Direction dir = char_to_direction(direction_char);
+
+            if (dir == DIR_QUIT) {
                 if (map->cells[hero_y][hero_x] == STAIRS_DOWN ||
                     !is_stairs_up_present(map) ||
                     !is_stairs_down_present(map)) {
@@ -194,15 +205,19 @@ void adventure(void) {
                 continue;
             }
 
-            int nx = hero_x, ny = hero_y;
-            if (direction == 'W' || direction == 'w') ny--;
-            else if (direction == 'S' || direction == 's') ny++;
-            else if (direction == 'A' || direction == 'a') nx--;
-            else if (direction == 'D' || direction == 'd') nx++;
-            else {
+            if (dir == DIR_NONE) {
                 printf("Неизвестная команда!\n");
                 while (getchar() != '\n');
                 continue;
+            }
+
+            int nx = hero_x, ny = hero_y;
+            switch (dir) {
+                case DIR_UP:    ny--; break;
+                case DIR_DOWN:  ny++; break;
+                case DIR_LEFT:  nx--; break;
+                case DIR_RIGHT: nx++; break;
+                default: break;
             }
 
             if (nx < 0 || nx >= map->width || ny < 0 || ny >= map->height) continue;
@@ -213,7 +228,7 @@ void adventure(void) {
                 break;
             }
 
-            if (move_hero(map, &hero_x, &hero_y, direction)) {
+            if (move_hero(map, &hero_x, &hero_y, direction_char)) {
                 steps++;
                 if (steps % COLLAPSE_INTERVAL == 0) {
                     printf("Пол начинает рушиться!\n");
