@@ -164,7 +164,20 @@ int is_stairs_down_present(Map *map) {
     return 0;
 }
 
-void adventure(void) {
+void adventure(Player *player, int *day, int *hour) {
+    if (player == NULL) {
+        printf("Сначала создайте персонажа!\n");
+        return;
+    }
+    if (player->stamina <= 0) {
+        printf("У вас нет выносливости! Отдохните.\n");
+        return;
+    }
+    if (*hour >= 2 && *hour < 8) {
+        printf("Сейчас ночь (02:00–08:00). Фермер должен спать.\n");
+        return;
+    }
+
     int floor = 1;
     while (1) {
         int height = MIN_MAP_SIZE + rand() % (MAX_MAP_SIZE - MIN_MAP_SIZE + 1);
@@ -186,6 +199,7 @@ void adventure(void) {
 
         while (1) {
             printf("\n--- Этаж %d ---\n", map->floor);
+            show_hud(player, map->floor, *hour);
             print_map(map, hero_x, hero_y);
             printf("W/A/S/D — движение, Q — выход: ");
             scanf(" %c", &direction_char);
@@ -197,7 +211,7 @@ void adventure(void) {
                     !is_stairs_up_present(map) ||
                     !is_stairs_down_present(map)) {
                     free_map(map);
-                    printf("Вы вышли из башни.\n");
+                    printf("Вы вышли из башни. Золото сохранено.\n");
                     return;
                 } else {
                     printf("Выход работает только на лестнице вниз (D)!\n");
@@ -223,12 +237,42 @@ void adventure(void) {
             if (nx < 0 || nx >= map->width || ny < 0 || ny >= map->height) continue;
 
             if (map->cells[ny][nx] == STAIRS_UP) {
-                printf("Вы поднимаетесь на этаж %d!\n", map->floor + 1);
+                player->stamina -= 5;
+                (*hour)++;
+                if (*hour >= 24) { *hour = 0; (*day)++; }
+
+                if (player->stamina <= 0) {
+                    printf("Вы обессилели! Спасательная служба доставляет вас домой.\n");
+                    player->gold /= 2;
+                    printf("За услуги списана половина золота. Осталось: %d\n", player->gold);
+                    free_map(map);
+                    return;
+                }
+                if (*hour >= 2 && *hour < 8) {
+                    printf("Наступила ночь! Вы засыпаете прямо в башне.\n");
+                    player->gold /= 2;
+                    printf("Вас доставили домой. Осталось золота: %d\n", player->gold);
+                    free_map(map);
+                    return;
+                }
+
+                int reward = GOLD_PER_FLOOR * floor;
+                player->gold += reward;
+                printf("Вы поднимаетесь на этаж %d! Получено %d золота.\n", floor + 1, reward);
                 new_floor = 1;
                 break;
             }
 
             if (move_hero(map, &hero_x, &hero_y, direction_char)) {
+                player->stamina--;
+                if (player->stamina <= 0) {
+                    printf("Вы обессилели! Спасательная служба доставляет вас домой.\n");
+                    player->gold /= 2;
+                    printf("За услуги списана половина золота. Осталось: %d\n", player->gold);
+                    free_map(map);
+                    return;
+                }
+
                 steps++;
                 if (steps % COLLAPSE_INTERVAL == 0) {
                     printf("Пол начинает рушиться!\n");

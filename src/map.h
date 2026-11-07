@@ -2,6 +2,7 @@
 #define MAP_H
 
 #include "utils.h"
+#include "player.h"
 
 typedef struct {
     char **cells;
@@ -10,6 +11,7 @@ typedef struct {
     int floor;
 } Map;
 
+Direction char_to_direction(char c);
 Map *create_map(int height, int width);
 void free_map(Map *map);
 void fill_map(Map *map);
@@ -20,7 +22,6 @@ void place_stairs(Map *map, char symbol);
 void collapse_floor(Map *map, int hero_x, int hero_y);
 int is_stairs_up_present(Map *map);
 int is_stairs_down_present(Map *map);
-Direction char_to_direction(char c);
-void adventure(void);
+void adventure(Player *player, int *day, int *hour);
 
 #endif

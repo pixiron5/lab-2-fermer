@@ -1,4 +1,3 @@
-// src/utils.h
 #ifndef UTILS_H
 #define UTILS_H
 
@@ -18,6 +17,9 @@
 #define STAIRS_DOWN 'D'
 #define ABYSS '!'
 #define COLLAPSE_INTERVAL 5
+#define GOLD_PER_FLOOR 10
+
+struct Player;
 
 typedef enum {
     DIR_NONE = 0,
@@ -29,7 +31,8 @@ typedef enum {
 } Direction;
 
 void show_time(int day, int hour);
-void skip_time(int *day, int *hour);
+void wait_time(int *day, int *hour);
+void time_menu(int *day, int *hour, struct Player *player);
 void read_string(char *buffer, int size);
 void load_items(char names[][MAX_NAME_LEN]);
 void replace_tag(const char *src, const char *tag, const char *value, char *dest);

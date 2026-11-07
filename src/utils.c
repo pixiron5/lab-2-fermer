@@ -1,29 +1,74 @@
 #include <stdio.h>
 #include <string.h>
 #include "utils.h"
+#include "player.h"
 
 void show_time(int day, int hour) {
     printf("Текущее время: День %d, %02d:00\n", day, hour);
 }
 
-void skip_time(int *day, int *hour) {
+void wait_time(int *day, int *hour) {
     int hours;
-    printf("Сколько часов хотите промотать? ");
+    printf("Сколько часов ждать? (нельзя пересечь 02:00): ");
     if (scanf("%d", &hours) != 1) {
         printf("Ошибка: нужно ввести число!\n");
         while (getchar() != '\n');
         return;
     }
-    if (hours < 0) {
-        printf("Часы не могут быть отрицательными!\n");
+    if (hours <= 0) {
+        printf("Нужно ждать хотя бы 1 час!\n");
         return;
     }
-    *hour += hours;
-    while (*hour >= 24) {
-        *hour -= 24;
-        (*day)++;
+
+    int total = *hour + hours;
+    int new_day = *day + total / 24;
+    int new_hour = total % 24;
+
+    if (new_day > *day && new_hour >= 2) {
+        printf("Нельзя ждать до 02:00! Фермер должен спать.\n");
+        return;
     }
-    printf("Прошло %d часов.\n", hours);
+
+    *day = new_day;
+    *hour = new_hour;
+    printf("Прошло %d часов. Сейчас: День %d, %02d:00\n", hours, *day, *hour);
+}
+
+void time_menu(int *day, int *hour, Player *player) {
+    int choice;
+    while (1) {
+        printf("\n=== Управление временем ===\n");
+        printf("[0] Назад\n");
+        printf("[1] Посмотреть на часы\n");
+        printf("[2] Ждать\n");
+        printf("[3] Лечь спать\n");
+        printf("Ваш выбор: ");
+
+        if (scanf("%d", &choice) != 1) {
+            printf("Ошибка: нужно ввести число!\n");
+            while (getchar() != '\n');
+            continue;
+        }
+        while (getchar() != '\n');
+
+        switch (choice) {
+            case 0: return;
+            case 1: show_time(*day, *hour); break;
+            case 2: wait_time(day, hour); break;
+            case 3:
+                if (player == NULL) {
+                    printf("Сначала создайте персонажа!\n");
+                } else {
+                    (*day)++;
+                    *hour = 8;
+                    player->hp = player->max_hp;
+                    player->stamina = player->max_stamina;
+                    printf("Вы поспали. День %d, 08:00. HP и выносливость восстановлены.\n", *day);
+                }
+                break;
+            default: printf("Неверный пункт меню!\n");
+        }
+    }
 }
 
 void read_string(char *buffer, int size) {
@@ -36,7 +81,7 @@ void load_items(char names[][MAX_NAME_LEN]) {
         "Пусто", "Дерево", "Камень", "Семена", "Лопата",
         "Грабли", "Тяпка", "Телега", "Лейка", "Корзина"
     };
-    FILE *file = fopen("/home/CORP.OMSU.RU/student/labT/lab-2-fermer/items.txt", "r");
+    FILE *file = fopen("items.txt", "r");
     if (file == NULL) {
         printf("Предупреждение: items.txt не найден, использую стандартные названия.\n");
         for (int i = 0; i < MAX_ITEMS; i++) {
