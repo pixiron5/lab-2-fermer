@@ -1,3 +1,4 @@
+// src/utils.h
 #ifndef UTILS_H
 #define UTILS_H
 
@@ -17,6 +18,15 @@
 #define STAIRS_DOWN 'D'
 #define ABYSS '!'
 #define COLLAPSE_INTERVAL 5
+
+typedef enum {
+    DIR_NONE = 0,
+    DIR_UP,
+    DIR_DOWN,
+    DIR_LEFT,
+    DIR_RIGHT,
+    DIR_QUIT
+} Direction;
 
 void show_time(int day, int hour);
 void skip_time(int *day, int *hour);
