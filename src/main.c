@@ -31,6 +31,7 @@ int main(void) {
         printf("[9] Расшифровать старые записи\n");
         printf("[10] Отправиться в приключение\n");
         printf("[11] Управление временем\n");
+        printf("[12] Снаряжение\n");
         printf("Ваш выбор: ");
 
         if (scanf("%d", &choice) != 1) {
@@ -109,6 +110,11 @@ int main(void) {
 
             case 11:
                 time_menu(&current_day, &current_hour, player);
+                break;
+            
+            case 12:
+                if (player == NULL) { printf("Сначала создайте персонажа!\n"); break; }
+                equipment_menu(player);
                 break;
 
             default:

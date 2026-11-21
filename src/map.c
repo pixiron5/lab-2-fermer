@@ -46,6 +46,7 @@ void free_map(Map *map) {
         free(map->cells[i]);
     }
     free(map->cells);
+    printf("Память структуры по адресу %p освобождена\n", (void*)map);
     free(map);
 }
 

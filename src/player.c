@@ -25,6 +25,13 @@ Player *create_player(void) {
     p->inventory[5] = 3;
     p->inventory[6] = 8;
     p->inventory[8] = 1;
+    for (int i = 0; i < EQUIP_SLOTS; i++) {
+        p->equipment[i].name[0] = '\0';
+        p->equipment[i].slot = (EquipSlot)i;
+        p->equipment[i].bonus_hp = 0;
+        p->equipment[i].bonus_stamina = 0;
+        p->equipment[i].is_equipped = 0;
+    }
     printf("Добро пожаловать, %s!\n", p->name);
     return p;
 }
@@ -165,4 +172,100 @@ void find_by_name(int inv[], char names[][MAX_NAME_LEN]) {
         printf("нет");
     }
     printf("\n");
+}
+
+void recalc_stats(Player *player) {
+    int bonus_hp = 0, bonus_stamina = 0;
+    for (int i = 0; i < EQUIP_SLOTS; i++) {
+        if (player->equipment[i].is_equipped) {
+            bonus_hp += player->equipment[i].bonus_hp;
+            bonus_stamina += player->equipment[i].bonus_stamina;
+        }
+    }
+    player->max_hp = 100 + bonus_hp;
+    player->max_stamina = 50 + bonus_stamina;
+    if (player->hp > player->max_hp) player->hp = player->max_hp;
+    if (player->stamina > player->max_stamina) player->stamina = player->max_stamina;
+}
+
+void equipment_menu(Player *player) {
+    int choice;
+    while (1) {
+        printf("\n--- Снаряжение ---\n");
+        const char *slot_names[] = {"Голова", "Тело", "Обувь"};
+        for (int i = 0; i < EQUIP_SLOTS; i++) {
+            printf("%d. %s: ", i + 1, slot_names[i]);
+            if (player->equipment[i].is_equipped) {
+                printf("%s (+%d HP, +%d вын)\n",
+                       player->equipment[i].name,
+                       player->equipment[i].bonus_hp,
+                       player->equipment[i].bonus_stamina);
+            } else {
+                printf("(пусто)\n");
+            }
+        }
+        printf("4. Надеть предмет\n");
+        printf("5. Снять предмет\n");
+        printf("6. Назад\n");
+        printf("Выбор: ");
+        if (scanf("%d", &choice) != 1) {
+            printf("Ошибка ввода!\n");
+            while (getchar() != '\n');
+            continue;
+        }
+        if (choice == 4) {
+            int slot;
+            printf("Слот (1-Голова, 2-Тело, 3-Обувь): ");
+            if (scanf("%d", &slot) != 1 || slot < 1 || slot > EQUIP_SLOTS) {
+                printf("Неверный слот!\n");
+                while (getchar() != '\n');
+                continue;
+            }
+            slot--;
+            if (player->equipment[slot].is_equipped) {
+                printf("Слот уже занят! Сначала снимите.\n");
+                continue;
+            }
+            char name[MAX_NAME_LEN];
+            printf("Название предмета: ");
+            while (getchar() != '\n');
+            read_string(name, MAX_NAME_LEN);
+            int hp, st;
+            printf("Бонус HP: ");
+            if (scanf("%d", &hp) != 1) { while (getchar() != '\n'); continue; }
+            printf("Бонус выносливости: ");
+            if (scanf("%d", &st) != 1) { while (getchar() != '\n'); continue; }
+            strcpy(player->equipment[slot].name, name);
+            player->equipment[slot].bonus_hp = hp;
+            player->equipment[slot].bonus_stamina = st;
+            player->equipment[slot].is_equipped = 1;
+            recalc_stats(player);
+            printf("Надето: %s. Макс. HP: %d, макс. вын: %d\n",
+                   name, player->max_hp, player->max_stamina);
+        } else if (choice == 5) {
+            int slot;
+            printf("Слот (1-Голова, 2-Тело, 3-Обувь): ");
+            if (scanf("%d", &slot) != 1 || slot < 1 || slot > EQUIP_SLOTS) {
+                printf("Неверный слот!\n");
+                while (getchar() != '\n');
+                continue;
+            }
+            slot--;
+            if (!player->equipment[slot].is_equipped) {
+                printf("Слот и так пуст.\n");
+                continue;
+            }
+            player->equipment[slot].is_equipped = 0;
+            player->equipment[slot].name[0] = '\0';
+            player->equipment[slot].bonus_hp = 0;
+            player->equipment[slot].bonus_stamina = 0;
+            recalc_stats(player);
+            printf("Снято. Макс. HP: %d, макс. вын: %d\n",
+                   player->max_hp, player->max_stamina);
+        } else if (choice == 6) {
+            break;
+        } else {
+            printf("Неверный выбор!\n");
+        }
+    }
 }

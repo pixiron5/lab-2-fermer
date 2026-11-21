@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#define EQUIP_SLOTS 3
 #define INVENTORY_SIZE 10
 #define MAX_ITEM_ID 9
 #define MAX_NAME_LEN 32
@@ -18,8 +19,6 @@
 #define ABYSS '!'
 #define COLLAPSE_INTERVAL 5
 #define GOLD_PER_FLOOR 10
-
-struct Player;
 
 typedef enum {
     DIR_NONE = 0,
